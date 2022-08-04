@@ -43,7 +43,7 @@ for (const [key, value] of Object.entries(dict)) {
   html += `<div id="tabs">`;
     
   for(const v of value) {
-    html += `<li>
+    html += `<li id="${v[2]}">
       <h3> <strong>Title:</strong> ${v[0]} </h3>
       <p><strong>Path:</strong> ${v[1]} </p>
       <button id="${v[2]}">Jump</button>
@@ -89,5 +89,11 @@ function activateWindow(tab_id) {
 
 function DropTab(tab_id) {
   chrome.tabs.remove(tab_id);
+   var item = document.getElementById(tab_id);
+   item.parentNode.removeChild(item);
+}
+
+function Refresh() {
+
 }
 
