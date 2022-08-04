@@ -14,9 +14,9 @@ for (const win of windows) {
     }
 
     if (dict[tld]) {
-      dict[tld].push([title, pathname])
+      dict[tld].push([title, pathname, tab.id])
     } else {
-      dict[tld]= [[title, pathname]]
+      dict[tld]= [[title, pathname, tab.id]]
     }
   }
 }
@@ -32,24 +32,62 @@ html += `
     </details>
     `
 
+
+
 for (const [key, value] of Object.entries(dict)) {
   html += `
     <details>
-  <summary><strong> ${key} ${value.length} </strong> </summary>
+  <summary><h2> ${key} ${value.length} </h2> </summary>
     <ul>`;
+
+  html += `<div id="tabs">`;
     
   for(const v of value) {
     html += `<li>
-      <p>
-      <strong>Title:</strong> ${v[0]} </p>
+      <h3> <strong>Title:</strong> ${v[0]} </h3>
       <p><strong>Path:</strong> ${v[1]} </p>
+      <button id="${v[2]}">Jump</button>
+      <button id="${v[2]}">Remove</button>
       </li> 
     `
   }
-  html += '</ul>'
+  html += '</div> </ul>'
+
 html += '</details>';
 }
 
 
 template.innerHTML = html;
+
+const wrapper =  document.getElementById("tabs");
+wrapper.addEventListener('click', (event) => {
+   const isButton = event.target.nodeName === 'BUTTON';
+  if (!isButton) {
+    return;
+  }
+  const button_text = event.target.textContent;
+
+  if (button_text == "Jump") {
+    activateWindow(parseInt(event.target.id));
+  }
+  if (button_text == "Remove") {
+    DropTab(parseInt(event.target.id));
+  }
+
+
+});
+
+function activateWindow(tab_id) {
+  chrome.tabs.get(tab_id, (tab) => { 
+    const win_id = tab.windowId;
+    console.log("Win ID: ", win_id);
+    chrome.windows.update(win_id, {'focused':true}, (win) => { 
+      chrome.tabs.update(parseInt(tab_id), {'highlighted': true}); 
+    });
+  })
+}
+
+function DropTab(tab_id) {
+  chrome.tabs.remove(tab_id);
+}
 
