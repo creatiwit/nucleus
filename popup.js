@@ -2,6 +2,9 @@ const windows = await chrome.windows.getAll({populate: true});
 
 
 var dict = {}
+var tld_dup = {}
+var dup = {}
+var dup_total = 0
 
 for (const win of windows) {
   for (const tab of win.tabs) {
@@ -12,6 +15,12 @@ for (const win of windows) {
       continue;
 
     }
+    if (dup[pathname]) {
+      dup_total +=1;
+    } else {
+      dup[pathname] = pathname;
+    }
+
 
     if (dict[tld]) {
       dict[tld].push([title, pathname, tab.id])
@@ -21,6 +30,22 @@ for (const win of windows) {
   }
 }
 
+for (const [key, value] of Object.entries(dict)) {
+  var tab_dup = {};
+  const tld = key;
+  for (const v of value) {
+    const pathname = v[1];
+    if (tab_dup[pathname]) {
+      console.log(pathname);
+      tld_dup[tld] += 1;
+    } else {
+      tab_dup[pathname] = pathname;
+      tld_dup[tld] = 0;
+    }
+  }
+}
+
+
 let template = document.querySelector('#tabs')
 let html = ''
 
@@ -28,23 +53,28 @@ html += `
   <details> 
     <summary>
     <strong>Total TLD ${Object.keys(dict).length}</strong>
+    <strong> Total Dups ${dup_total}</strong>
     </summary>
     </details>
     `
 
+var keys = Object.keys(dict);
+keys.sort();
 
 
-for (const [key, value] of Object.entries(dict)) {
+for (const key of keys) {
+  const value = dict[key];
+  const dup_count = tld_dup[key];
   html += `
     <details>
-  <summary><h2> ${key} ${value.length} </h2> </summary>
+      <summary><h2> ${key} ${value.length} ${dup_count} </h2> </summary>
     <ul>`;
 
   html += `<div id="tabs">`;
     
   for(const v of value) {
     html += `<li id="${v[2]}">
-      <h3> <strong>Title:</strong> ${v[0]} </h3>
+      <h3> <strong>Title:</strong> ${v[0]}</h3>
       <p><strong>Path:</strong> ${v[1]} </p>
       <button id="${v[2]}">Jump</button>
       <button id="${v[2]}">Remove</button>
@@ -54,10 +84,11 @@ for (const [key, value] of Object.entries(dict)) {
   html += '</div> </ul>'
 
 html += '</details>';
+template.innerHTML += html;
+html = '';
 }
 
 
-template.innerHTML = html;
 
 const wrapper =  document.getElementById("tabs");
 wrapper.addEventListener('click', (event) => {
