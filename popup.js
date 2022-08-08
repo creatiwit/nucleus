@@ -17,8 +17,9 @@ for (const win of windows) {
     }
     if (dup[pathname]) {
       dup_total +=1;
+      dup[pathname].add(tab.id)
     } else {
-      dup[pathname] = pathname;
+      dup[pathname] = new Set([tab.id])
     }
 
 
@@ -54,12 +55,27 @@ html += `
     <summary>
     <strong>Total TLD ${Object.keys(dict).length}</strong>
     <strong> Total Dups ${dup_total}</strong>
+      <button>Drop Dup</button>
     </summary>
     </details>
     `
 
 var keys = Object.keys(dict);
 keys.sort();
+
+
+function DropDup() {
+
+for (let [key,value] of Object.entries(dup)) {
+  for (let tab of value) {
+    if (value.size == 1) {
+      break;
+    }
+    DropTab(tab);
+    value.delete(tab);
+  }
+}}
+
 
 
 for (const key of keys) {
@@ -104,6 +120,9 @@ wrapper.addEventListener('click', (event) => {
   if (button_text == "Remove") {
     DropTab(parseInt(event.target.id));
   }
+  if (button_text == "Drop Dup") {
+    DropDup();
+  }
 
 
 });
@@ -121,7 +140,9 @@ function activateWindow(tab_id) {
 function DropTab(tab_id) {
   chrome.tabs.remove(tab_id);
    var item = document.getElementById(tab_id);
+  if (item != null) {
    item.parentNode.removeChild(item);
+  }
 }
 
 function Refresh() {
